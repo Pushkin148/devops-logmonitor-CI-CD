@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# Logs
+*.log
+
+# Docker
+*.pid
+*.sock
+
+# Keys and credentials
+*.pem
+*.key
+
+# System
+.DS_Store
+Thumbs.db
+
+# VSCode / IDE
+.vscode/
+.idea/
