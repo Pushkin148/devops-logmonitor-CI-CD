@@ -10,3 +10,10 @@ output "private_subnet_ids" {
   value = [aws_subnet.private_1.id, aws_subnet.private_2.id]
 }
 
+output "internet_gateway_id" {
+  value = aws_internet_gateway.main.id
+}
+
+output "public_route_table_id" {
+  value = aws_route_table.public.id
+}
