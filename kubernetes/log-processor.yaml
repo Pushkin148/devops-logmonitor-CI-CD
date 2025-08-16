@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-monitor-deployment
+  labels:
+    app: log-monitor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: log-monitor
+  template:
+    metadata:
+      labels:
+        app: log-monitor
+    spec:
+      containers:
+        - name: log-monitor
+          image: 365458640437.dkr.ecr.us-east-1.amazonaws.com/log-monitor-app:latest
+          ports:
+            - containerPort: 8000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: log-monitor-service
+spec:
+  selector:
+    app: log-monitor
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: LoadBalancer
+
