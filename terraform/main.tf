@@ -110,7 +110,7 @@ resource "aws_route_table_association" "public_2" {
 # Elastic IP for NAT Gateway 
 
 resource "aws_eip" "nat" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "${var.cluster_name}-nat-eip"
