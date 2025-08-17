@@ -1,16 +1,17 @@
-# Use lightweight Python image
+# Use official Python image
 FROM python:3.11-slim
 
-# Set working directory inside container
+# Set work directory
 WORKDIR /app
 
-# Copy requirements and install dependencies
+# Copy requirements
 COPY ../requirements.txt .
+
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code and scripts
+# Copy application code
 COPY ../app/ ./app
-COPY ../scripts/ ./scripts
 
 # Expose the port FastAPI will run on
 EXPOSE 8000
