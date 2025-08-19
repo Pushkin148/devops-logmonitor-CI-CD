@@ -6,14 +6,8 @@ metadata:
 data:
   prometheus.yml: |
     global:
-      scrape_interval: 15s
-
+      scrape_interval: 5s
     scrape_configs:
-      - job_name: 'prometheus'
-        static_configs:
-          - targets: ['localhost:9090']
-
       - job_name: 'log-monitor'
-        metrics_path: /metrics
         static_configs:
-          - targets: ['log-monitor-service:8000']
+          - targets: ['log-monitor-deployment:8000']

@@ -22,27 +22,24 @@ def generate_log():
     generate_fake_log()
     return {"status": "log generated", "total_logs": len(logs)}
 
-# JSON metrics (existing one - kept as is, plus new warning_logs)
+# JSON metrics
 @app.get("/metrics-json")
 def metrics_json():
-    error_count = sum(1 for log in logs if log["level"] == "ERROR")
-    warning_count = sum(1 for log in logs if log["level"] == "WARNING")
-    return {
-        "total_logs": len(logs),
-        "error_logs": error_count,
-        "warning_logs": warning_count
-    }
+    metric_counts = {}
+    for log in logs:
+        metric_counts[log["level"].lower() + "_logs"] = metric_counts.get(log["level"].lower() + "_logs", 0) + 1
+    metric_counts["total_logs"] = len(logs)
+    return metric_counts
 
-# Prometheus-compatible metrics (existing plus warning_logs)
+# Prometheus metrics
 @app.get("/metrics")
 def metrics_prometheus():
-    error_count = sum(1 for log in logs if log["level"] == "ERROR")
-    warning_count = sum(1 for log in logs if log["level"] == "WARNING")
-    metrics_data = (
-        f"total_logs {len(logs)}\n"
-        f"error_logs {error_count}\n"
-        f"warning_logs {warning_count}\n"
-    )
+    metric_counts = {}
+    for log in logs:
+        metric_name = log["level"].lower() + "_logs"
+        metric_counts[metric_name] = metric_counts.get(metric_name, 0) + 1
+    metric_counts["total_logs"] = len(logs)
+    metrics_data = "\n".join(f"{k} {v}" for k, v in metric_counts.items())
     return Response(content=metrics_data, media_type="text/plain")
 
 @app.get("/")

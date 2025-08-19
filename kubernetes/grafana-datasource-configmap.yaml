@@ -4,12 +4,11 @@ metadata:
   name: grafana-datasources
   namespace: monitoring
 data:
-  prometheus-datasource.yaml: |
+  prometheus.yaml: |
     apiVersion: 1
     datasources:
       - name: Prometheus
-        uid: prometheus
         type: prometheus
         access: proxy
-        url: http://prometheus-service.monitoring.svc.cluster.local:9090
+        url: http://prometheus-service:9090
         isDefault: true

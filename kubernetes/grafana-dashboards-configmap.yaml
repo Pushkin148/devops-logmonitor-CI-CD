@@ -3,30 +3,34 @@ kind: ConfigMap
 metadata:
   name: grafana-dashboards
   namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
 data:
   log-monitor-dashboard.json: |
     {
-      "uid": "log-monitor-dashboard",
-      "title": "Log Monitor Dashboard",
-      "tags": ["logs","monitoring"],
+      "id": null,
+      "title": "Log Monitor Metrics",
+      "tags": [],
       "timezone": "browser",
-      "schemaVersion": 36,
+      "schemaVersion": 30,
       "version": 1,
-      "refresh": "10s",
+      "refresh": "5s",
       "panels": [
         {
-          "type": "stat",
-          "title": "Total Logs",
-          "id": 1,
-          "datasource": {"type": "prometheus","uid": "prometheus"},
-          "targets":[{"expr":"total_logs","legendFormat":"Total Logs","refId":"A"}]
-        },
-        {
-          "type": "stat",
-          "title": "Error Logs",
-          "id": 2,
-          "datasource": {"type": "prometheus","uid": "prometheus"},
-          "targets":[{"expr":"error_logs","legendFormat":"Error Logs","refId":"B"}]
+          "type": "graph",
+          "title": "Dynamic Log Metrics",
+          "targets": [
+            {
+              "expr": "{__name__=~\".*_logs\"}",
+              "format": "time_series",
+              "instant": false
+            }
+          ],
+          "legend": {
+            "show": true,
+            "values": true
+          },
+          "id": 1
         }
       ]
     }
