@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: log-monitor-deployment
+  namespace: monitoring
   labels:
     app: log-monitor
 spec:
@@ -19,12 +20,18 @@ spec:
           image: 365458640437.dkr.ecr.us-east-1.amazonaws.com/log-monitor-app:latest
           ports:
             - containerPort: 8000
-
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: log-monitor-service
+  namespace: monitoring
 spec:
   selector:
     app: log-monitor
@@ -32,5 +39,4 @@ spec:
     - protocol: TCP
       port: 8000
       targetPort: 8000
-  type: LoadBalancer
-
+  type: ClusterIP

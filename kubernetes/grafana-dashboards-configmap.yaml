@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  log-monitor-dashboard.json: |
+    {
+      "uid": "log-monitor-dashboard",
+      "title": "Log Monitor Dashboard",
+      "tags": ["logs","monitoring"],
+      "timezone": "browser",
+      "schemaVersion": 36,
+      "version": 1,
+      "refresh": "10s",
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Total Logs",
+          "id": 1,
+          "datasource": {"type": "prometheus","uid": "prometheus"},
+          "targets":[{"expr":"total_logs","legendFormat":"Total Logs","refId":"A"}]
+        },
+        {
+          "type": "stat",
+          "title": "Error Logs",
+          "id": 2,
+          "datasource": {"type": "prometheus","uid": "prometheus"},
+          "targets":[{"expr":"error_logs","legendFormat":"Error Logs","refId":"B"}]
+        }
+      ]
+    }
