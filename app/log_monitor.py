@@ -34,7 +34,7 @@ def get_level_counter(level: str) -> Counter:
     if key not in LEVEL_COUNTERS:
         metric_name = f"{key.lower()}_logs"
         c = Counter(metric_name, f"{key.title()} logs processed")
-        REGISTRY.register(c)  # <-- ensures new levels are visible to Prometheus
+        #REGISTRY.register(c)  # <-- ensures new levels are visible to Prometheus
         LEVEL_COUNTERS[key] = c
     return LEVEL_COUNTERS[key]
 
