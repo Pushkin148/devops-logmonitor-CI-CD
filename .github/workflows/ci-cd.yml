@@ -40,8 +40,24 @@ jobs:
         run: |
           aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
 
-      - name: Deploy to EKS
+      # Apply monitoring stack first (Prometheus, Grafana, Alertmanager, Mailhog, etc.)
+      - name: Apply monitoring stack
+        run: |
+          kubectl apply -f kubernetes/prometheus/
+          kubectl apply -f kubernetes/alertmanager/
+          kubectl apply -f kubernetes/grafana/
+          kubectl apply -f kubernetes/mailhog.yaml
+
+      # Then apply the application (log monitor, cronjob, log processor, etc.)
+      - name: Apply application manifests
+        run: |
+          kubectl apply -f kubernetes/log-generator-cronjob.yaml
+          kubectl apply -f kubernetes/log-processor.yaml
+          kubectl apply -f kubernetes/
+
+      # Finally update the app deployment with the new image
+      - name: Update Deployment with new image
         run: |
           kubectl set image deployment/log-monitor-deployment \
-          log-monitor=$ECR_REGISTRY/$IMAGE_NAME:latest
-          kubectl rollout status deployment/log-monitor-deployment
+          log-monitor=$ECR_REGISTRY/$IMAGE_NAME:latest -n monitoring
+          kubectl rollout status deployment/log-monitor-deployment -n monitoring

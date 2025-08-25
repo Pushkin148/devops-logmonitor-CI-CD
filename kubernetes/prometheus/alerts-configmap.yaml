@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerts
+  namespace: monitoring
+data:
+  alerts.yml: |
+    groups:
+      - name: log-monitor-alerts
+        rules:
+          # Dynamic alert: fires if any *_logs counter increases rapidly
+          - alert: HighErrorRate
+            expr: increase(error_logs[1m]) > 5
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High error rate detected"
+              description: "More than 5 errors in the last minute."
+
+          # Generic template for any new log level metrics
+          - alert: HighLogRate
+            expr: |
+              sum without(instance) (increase({__name__=~".*_logs"}[1m])) > 10
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High log rate detected for {{ $labels.__name__ }}"
+              description: "The log counter {{ $labels.__name__ }} increased rapidly in the last minute."

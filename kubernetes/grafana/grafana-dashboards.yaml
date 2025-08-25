@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  log-monitor-dashboard.json: |
+    {
+      "id": null,
+      "title": "Log Monitor Overview",
+      "tags": ["logs", "monitoring"],
+      "timezone": "browser",
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Total Logs",
+          "targets": [
+            { "expr": "total_logs", "legendFormat": "Total Logs" }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Error Logs",
+          "targets": [
+            { "expr": "error_logs", "legendFormat": "Error Logs" }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Warning Logs",
+          "targets": [
+            { "expr": "warning_logs", "legendFormat": "Warning Logs" }
+          ]
+        }
+      ]
+    }

@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dash-providers
+  name: grafana-dashboard-providers
   namespace: monitoring
 data:
-  dashboards.yaml: |
+  dashboard-provider.yaml: |
     apiVersion: 1
     providers:
       - name: 'default'
@@ -14,4 +14,4 @@ data:
         disableDeletion: false
         updateIntervalSeconds: 10
         options:
-          path: /var/lib/grafana/dashboards/default
+          path: /var/lib/grafana/dashboards

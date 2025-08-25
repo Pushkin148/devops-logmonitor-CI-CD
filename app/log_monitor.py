@@ -1,47 +1,98 @@
-from fastapi import FastAPI, Response
-from datetime import datetime
+import os
 import random
+from datetime import datetime
+from typing import Dict, List, Optional
 
-app = FastAPI()
+from fastapi import FastAPI, Response, Query
+from prometheus_client import (
+    Counter,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
 
-# Fake log store
-logs = []
+app = FastAPI(title="Log Monitor")
 
-# Simulate log generation
-def generate_fake_log():
-    levels = ["INFO", "WARNING", "ERROR"]
-    log = {
+# ---- Config ----
+# Default log levels; can be extended by setting env LOG_LEVELS="INFO,WARNING,ERROR,DEBUG"
+DEFAULT_LEVELS = ["INFO", "WARNING", "ERROR"]
+LEVELS: List[str] = [
+    lvl.strip().upper()
+    for lvl in os.getenv("LOG_LEVELS", ",".join(DEFAULT_LEVELS)).split(",")
+    if lvl.strip()
+]
+
+# ---- In-memory log store (demo only) ----
+logs: List[Dict] = []
+
+# ---- Prometheus metrics (dynamic per-level counters + totals) ----
+TOTAL_LOGS = Counter("total_logs", "Total logs processed")
+# Keep a registry of per-level counters so adding a new level is trivial
+LEVEL_COUNTERS: Dict[str, Counter] = {}
+
+
+def get_level_counter(level: str) -> Counter:
+    """
+    Return a Counter for the given level. Create it on first use so
+    adding a new level only requires adding it to LEVELS or passing it at runtime.
+    Metric name pattern: <lowercase>_logs (e.g., info_logs, warning_logs)
+    """
+    key = level.upper()
+    if key not in LEVEL_COUNTERS:
+        metric_name = f"{key.lower()}_logs"
+        LEVEL_COUNTERS[key] = Counter(
+            metric_name,
+            f"{key.title()} logs processed",
+        )
+    return LEVEL_COUNTERS[key]
+
+
+def record_log(level: str, message: str = "This is a sample log message") -> Dict:
+    level = level.upper()
+    if level not in LEVELS:
+        # If a new level is used ad-hoc, accept it and expose a counter for it.
+        LEVELS.append(level)
+    entry = {
         "timestamp": datetime.now().isoformat(),
-        "level": random.choice(levels),
-        "message": "This is a sample log message"
+        "level": level,
+        "message": message,
     }
-    logs.append(log)
+    logs.append(entry)
 
-@app.get("/generate-log")
-def generate_log():
-    generate_fake_log()
-    return {"status": "log generated", "total_logs": len(logs)}
+    # Update metrics
+    TOTAL_LOGS.inc()
+    get_level_counter(level).inc()
+    return entry
 
-# JSON metrics
-@app.get("/metrics-json")
+
+@app.get("/", tags=["health"])
+def root():
+    return {"message": "Log Monitor API running", "levels": LEVELS}
+
+
+@app.get("/generate-log", tags=["logs"])
+def generate_log(level: Optional[str] = Query(default=None, description="Override level, e.g. DEBUG")):
+    """
+    Generate one log. If ?level= is provided, use it; otherwise pick randomly from LEVELS.
+    """
+    lvl = level.upper() if level else random.choice(LEVELS)
+    entry = record_log(lvl)
+    return {"status": "log generated", "level": entry["level"], "total_logs": len(logs)}
+
+
+@app.get("/metrics-json", tags=["metrics"])
 def metrics_json():
-    metric_counts = {}
-    for log in logs:
-        metric_counts[log["level"].lower() + "_logs"] = metric_counts.get(log["level"].lower() + "_logs", 0) + 1
-    metric_counts["total_logs"] = len(logs)
-    return metric_counts
+    """
+    Convenience JSON view of counters for quick eyeballing (not used by Prometheus).
+    """
+    data = { "total_logs": int(TOTAL_LOGS._value.get()) }  # type: ignore[attr-defined]
+    for lvl, counter in LEVEL_COUNTERS.items():
+        data[f"{lvl.lower()}_logs"] = int(counter._value.get())  # type: ignore[attr-defined]
+    return data
 
-# Prometheus metrics
+
 @app.get("/metrics")
 def metrics_prometheus():
-    metric_counts = {}
-    for log in logs:
-        metric_name = log["level"].lower() + "_logs"
-        metric_counts[metric_name] = metric_counts.get(metric_name, 0) + 1
-    metric_counts["total_logs"] = len(logs)
-    metrics_data = "\n".join(f"{k} {v}" for k, v in metric_counts.items())
-    return Response(content=metrics_data, media_type="text/plain")
-
-@app.get("/")
-def root():
-    return {"message": "Log Monitor API running"}
+    """
+    Prometheus scrape endpoint. Exposes standard text exposition format.
+    """
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)

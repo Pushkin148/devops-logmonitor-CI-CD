@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        # Static dashboards
+        - name: grafana-dashboards
+          mountPath: /var/lib/grafana/dashboards/static
+        # Dynamic dashboards
+        - name: grafana-dashboards-dynamic
+          mountPath: /var/lib/grafana/dashboards/dynamic
+        # Dashboard provider config
+        - name: grafana-dashboard-providers
+          mountPath: /etc/grafana/provisioning/dashboards/dashboard-provider.yaml
+          subPath: dashboard-provider.yaml
+        # Datasource config
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+          subPath: datasources.yaml
+      volumes:
+      - name: grafana-dashboards
+        configMap:
+          name: grafana-dashboards
+      - name: grafana-dashboards-dynamic
+        configMap:
+          name: grafana-dashboards-dynamic
+      - name: grafana-dashboard-providers
+        configMap:
+          name: grafana-dashboard-providers
+      - name: grafana-datasources
+        configMap:
+          name: grafana-datasources

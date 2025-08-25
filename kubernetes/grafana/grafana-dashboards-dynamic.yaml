@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-dynamic
+  namespace: monitoring
+data:
+  log-monitor-dynamic.json: |
+    {
+      "id": null,
+      "title": "Log Monitor Dynamic",
+      "tags": ["logs", "monitoring"],
+      "timezone": "browser",
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Log Metrics Over Time",
+          "targets": [
+            {
+              "expr": "{__name__=~\".*_logs\"}",
+              "legendFormat": "{{__name__}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Latest Log Metrics",
+          "targets": [
+            {
+              "expr": "{__name__=~\".*_logs\"}",
+              "legendFormat": "{{__name__}}"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"]
+            }
+          }
+        }
+      ]
+    }
